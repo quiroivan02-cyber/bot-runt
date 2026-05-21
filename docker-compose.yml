@@ -6,6 +6,7 @@ services:
     volumes:
       - ./credentials.json:/app/credentials.json:ro
       - ./debug:/app/debug
+    ports:
+      - "8000:8000"
     stdin_open: true
     tty: true
-

@@ -11,3 +11,4 @@ debug_text.txt
 .git/
 .vscode/
 .idea/
+!templates/

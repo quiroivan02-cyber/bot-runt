@@ -9,6 +9,7 @@ Automatizacion en Python para consultar informacion publica de vehiculos en el p
 - Consulta cada vehiculo por placa y propietario.
 - Extrae informacion general del vehiculo, SOAT y revision tecnico-mecanica.
 - Guarda los resultados nuevamente en la hoja.
+- Incluye un dashboard web para ejecutar el bot, ver logs en vivo y descargar resultados CSV si existen.
 
 ## Tecnologias
 
@@ -16,6 +17,7 @@ Automatizacion en Python para consultar informacion publica de vehiculos en el p
 - Selenium
 - Google Sheets API con `gspread`
 - Groq Vision para extraer datos desde capturas
+- Flask + Socket.IO para dashboard
 - Firefox
 - Docker opcional
 
@@ -24,6 +26,8 @@ Automatizacion en Python para consultar informacion publica de vehiculos en el p
 ```text
 .
 ├── runt_automation.py
+├── dashboard.py
+├── templates/
 ├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml
@@ -57,14 +61,29 @@ pip install -r requirements.txt
 python runt_automation.py
 ```
 
+## Dashboard local
+
+```bash
+source venv/bin/activate
+python dashboard.py
+```
+
+Abre:
+
+```text
+http://localhost:8000
+```
+
+Desde el dashboard puedes iniciar o detener el bot y ver los logs emitidos por el proceso.
+
 ## Ejecucion con Docker
 
 ```bash
 docker compose build
-docker compose run --rm bot-runt
+docker compose up
 ```
 
-El contenedor usa modo headless por defecto. Las capturas de depuracion quedan en `debug/`.
+Luego abre `http://localhost:8000`. El contenedor usa modo headless por defecto. Las capturas de depuracion quedan en `debug/`.
 
 ## GitHub y despliegue
 
@@ -83,6 +102,8 @@ Consulta [DEPLOYMENT.md](DEPLOYMENT.md) para subirlo a GitHub y ejecutarlo como 
 | `GOOGLE_CREDENTIALS_FILE` | Ruta del JSON de credenciales | `credentials.json` |
 | `DEBUG_DIR` | Carpeta para capturas temporales | `debug` |
 | `HEADLESS` | Ejecuta Firefox sin ventana | `false` local, `true` en Docker |
+| `PORT` | Puerto del dashboard Flask | `8000` |
+| `FLASK_SECRET_KEY` | Clave interna de sesion Flask | `change-me` |
 | `GROQ_API_KEY` | API key para extraccion visual | vacio |
 | `ENABLE_GROQ_CAPTCHA` | Habilita lectura automatica de CAPTCHA | `false` |
 

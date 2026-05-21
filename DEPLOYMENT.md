@@ -67,7 +67,7 @@ schedule:
 
 GitHub usa horario UTC. Para Colombia, `12:00 UTC` equivale a `7:00 AM` en hora Colombia.
 
-## Alternativa: Docker en servidor
+## Alternativa: Docker en servidor con dashboard
 
 En un servidor con Docker:
 
@@ -81,8 +81,10 @@ Luego copia `credentials.json`, completa `.env` y ejecuta:
 
 ```bash
 docker compose build
-docker compose run --rm bot-runt
+docker compose up -d
 ```
+
+El dashboard queda disponible en el puerto `8000`.
 
 Para programarlo en Linux:
 
@@ -93,7 +95,7 @@ crontab -e
 Ejemplo diario a las 7 AM hora del servidor:
 
 ```cron
-0 7 * * * cd /ruta/bot-runt && docker compose run --rm bot-runt
+0 7 * * * cd /ruta/bot-runt && docker compose run --rm bot-runt python runt_automation.py
 ```
 
 ## Sobre servidores gratuitos

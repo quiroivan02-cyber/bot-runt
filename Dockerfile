@@ -17,7 +17,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY runt_automation.py .
+COPY dashboard.py .
+COPY templates ./templates
 COPY .env.example .
 
-CMD ["python", "runt_automation.py"]
-
+CMD ["python", "dashboard.py"]
