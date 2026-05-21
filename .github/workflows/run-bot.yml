@@ -1,0 +1,59 @@
+name: Run Bot
+
+on:
+  workflow_dispatch:
+  # Para ejecutarlo en horario fijo, descomenta estas lineas.
+  # schedule:
+  #   - cron: "0 12 * * *"
+
+concurrency:
+  group: runt-bot
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      SHEET_NAME: ${{ secrets.SHEET_NAME }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GOOGLE_CREDENTIALS_FILE: credentials.json
+      HEADLESS: "true"
+      ENABLE_GROQ_CAPTCHA: "true"
+      DEBUG_DIR: debug
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Firefox and Tesseract
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y firefox tesseract-ocr
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Write Google credentials
+        run: |
+          printf '%s' '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > credentials.json
+
+      - name: Run automation
+        run: python runt_automation.py
+
+      - name: Upload debug screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runt-debug
+          path: debug/
+          if-no-files-found: ignore
+

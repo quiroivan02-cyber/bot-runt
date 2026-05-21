@@ -1,0 +1,13 @@
+venv/
+.venv/
+__pycache__/
+.env
+credentials.json
+debug/
+*.png
+*.save
+*.pkg
+debug_text.txt
+.git/
+.vscode/
+.idea/

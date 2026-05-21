@@ -1,0 +1,25 @@
+# Entorno local
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Secretos y credenciales
+.env
+credentials.json
+*.pem
+*.key
+
+# Artefactos generados por el bot
+debug/
+*.png
+*.log
+*.save
+*.pkg
+debug_text.txt
+
+# Sistema/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

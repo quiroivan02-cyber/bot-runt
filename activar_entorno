@@ -1,0 +1,7 @@
+cd ~/Escritorio/bot_Runt
+source venv/bin/activate
+
+
+
+python runt_automation.py  
+
