@@ -21,6 +21,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.keys import Keys
 import time
 import re
+import unicodedata
 
 try:
     from dotenv import load_dotenv
@@ -38,18 +39,69 @@ RUNT_URL = os.getenv(
 )
 DEBUG_DIR = os.getenv("DEBUG_DIR", "debug")
 HEADLESS = os.getenv("HEADLESS", "false").lower() in ("1", "true", "yes", "si", "sí")
-ENABLE_GROQ_CAPTCHA = os.getenv("ENABLE_GROQ_CAPTCHA", "false").lower() in (
-    "1",
-    "true",
-    "yes",
-    "si",
-    "sí",
-)
-
 
 def debug_path(filename):
     os.makedirs(DEBUG_DIR, exist_ok=True)
     return os.path.join(DEBUG_DIR, filename)
+
+
+def normalize_text(text):
+    text = unicodedata.normalize("NFKD", str(text))
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    return re.sub(r"\s+", " ", text).strip().upper()
+
+
+VEHICLE_LABELS = [
+    "PLACA DEL VEHICULO",
+    "NRO. DE LICENCIA DE TRANSITO",
+    "TIPO DE SERVICIO",
+    "ESTADO DEL VEHICULO",
+    "CLASE DE VEHICULO",
+    "MARCA",
+    "LINEA",
+    "MODELO",
+    "COLOR",
+    "NUMERO DE SERIE",
+    "NUMERO DE MOTOR",
+    "NUMERO DE CHASIS",
+    "NUMERO DE VIN",
+    "CILINDRAJE",
+    "TIPO DE CARROCERIA",
+    "TIPO COMBUSTIBLE",
+    "FECHA DE MATRICULA INICIAL",
+]
+
+
+def extract_value_after_label(lines, label):
+    normalized_label = normalize_text(label)
+    normalized_known_labels = [normalize_text(item) for item in VEHICLE_LABELS]
+
+    for index, line in enumerate(lines):
+        normalized_line = normalize_text(line)
+        label_pos = normalized_line.find(normalized_label)
+        if label_pos == -1:
+            continue
+
+        value = line[label_pos + len(label):].strip(" :\t")
+        normalized_value = normalize_text(value)
+
+        for other_label in normalized_known_labels:
+            if other_label == normalized_label:
+                continue
+            other_pos = normalized_value.find(other_label)
+            if other_pos > 0:
+                value = value[:other_pos].strip(" :\t")
+                break
+
+        if value:
+            return value
+
+        for next_line in lines[index + 1:index + 4]:
+            candidate = next_line.strip()
+            if candidate and normalize_text(candidate).rstrip(":") not in normalized_known_labels:
+                return candidate
+
+    return ""
 
 
 # ===== Screens =====
@@ -214,23 +266,49 @@ class ConsultarRuntTask:
         self.placa = placa.upper().strip()
         self.cedula = str(cedula).strip()
 
-    def resolver_captcha_con_groq(self):
-        """Resuelve CAPTCHA usando Groq Vision API con reintentos"""
-        if not ENABLE_GROQ_CAPTCHA:
-            print("  ⌨️  CAPTCHA manual configurado")
-            return self.resolver_captcha_gratis()
+    def extraer_datos_vehiculo_dom(self):
+        """Extrae datos generales desde el texto renderizado del RUNT."""
+        try:
+            text = self.driver.find_element(By.TAG_NAME, "body").text
+            lines = [line.strip() for line in text.splitlines() if line.strip()]
+            datos = {
+                "marca": extract_value_after_label(lines, "MARCA"),
+                "linea": extract_value_after_label(lines, "LINEA"),
+                "modelo": extract_value_after_label(lines, "MODELO"),
+                "color": extract_value_after_label(lines, "COLOR"),
+                "combustible": extract_value_after_label(lines, "TIPO COMBUSTIBLE"),
+                "clase": extract_value_after_label(lines, "CLASE DE VEHICULO"),
+                "tipo_servicio": extract_value_after_label(lines, "TIPO DE SERVICIO"),
+                "estado": extract_value_after_label(lines, "ESTADO DEL VEHICULO"),
+            }
+            encontrados = sum(1 for value in datos.values() if value)
+            print(f"  🧾 DOM vehículo: {encontrados}/8 campos")
+            return datos
+        except Exception as e:
+            print(f"  ⚠️  DOM vehículo error: {str(e)[:80]}")
+            return {
+                "marca": "",
+                "linea": "",
+                "modelo": "",
+                "color": "",
+                "combustible": "",
+                "clase": "",
+                "tipo_servicio": "",
+                "estado": "",
+            }
 
+    def resolver_captcha_con_groq(self):
+        """Resuelve CAPTCHA exclusivamente usando Groq Vision API."""
         intentos_maximos = 5
         
         for intento in range(1, intentos_maximos + 1):
             try:
-                import sys
                 import importlib.util
                 
                 spec = importlib.util.find_spec("groq")
                 if spec is None:
-                    print("  ⚠️  Groq no instalado, usando OCR local")
-                    return self.resolver_captcha_gratis()
+                    print("  ❌ Groq no instalado; la IA no puede resolver el CAPTCHA")
+                    return False
                 
                 from groq import Groq
                 import base64
@@ -241,8 +319,8 @@ class ConsultarRuntTask:
                 api_key = os.getenv('GROQ_API_KEY')
                 
                 if not api_key:
-                    print("  ⚠️  GROQ_API_KEY no encontrada")
-                    return self.resolver_captcha_gratis()
+                    print("  ❌ GROQ_API_KEY no encontrada; la IA no puede resolver el CAPTCHA")
+                    return False
                 
                     # Toma screenshot del CAPTCHA - Método mejorado
                 try:
@@ -363,16 +441,12 @@ Characters:"""
                         time.sleep(2)
                         continue
                     else:
-                        print("  👁️  Verifica manualmente")
-                        captcha_manual = input("  ⌨️  CAPTCHA (ENTER=usar sugerencia): ").strip()
-                        captcha_final = captcha_manual if captcha_manual else captcha_text
-                        EnterText.into(self.driver, captcha_final, RuntScreen.captcha_input)
-                        time.sleep(1)
-                        return True
+                        print("  ❌ Groq no devolvió un CAPTCHA válido")
+                        return False
                 
             except ImportError as e:
                 print(f"  ⚠️  Import error: {str(e)[:50]}")
-                return self.resolver_captcha_gratis()
+                return False
             except Exception as e:
                 print(f"  ⚠️  Error Groq: {str(e)[:80]}")
                 if intento < intentos_maximos:
@@ -380,32 +454,10 @@ Characters:"""
                     time.sleep(2)
                     continue
                 else:
-                    print("  🔄 Usando OCR local como fallback")
-                    return self.resolver_captcha_gratis()
+                    print("  ❌ Groq no pudo resolver el CAPTCHA")
+                    return False
         
-        return self.resolver_captcha_gratis()
-    
-
-    def resolver_captcha_gratis(self):
-        """Permite resolver el CAPTCHA manualmente sin depender de servicios externos."""
-        try:
-            self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
-            time.sleep(0.5)
-            self.driver.save_screenshot(debug_path("captcha_page.png"))
-            captcha_img = self.driver.find_element(By.CSS_SELECTOR, "img[src^='data:image/png']")
-            captcha_file = debug_path("captcha_manual.png")
-            captcha_img.screenshot(captcha_file)
-            print(f"  👁️  CAPTCHA guardado en: {captcha_file}")
-        except Exception as e:
-            print(f"  ⚠️  No se pudo guardar imagen del CAPTCHA: {str(e)[:80]}")
-
-        captcha_manual = input("  ⌨️  Escribe el CAPTCHA y presiona ENTER: ").strip()
-        if not captcha_manual:
-            return False
-
-        EnterText.into(self.driver, captcha_manual, RuntScreen.captcha_input)
-        time.sleep(1)
-        return True
+        return False
 
     
     
@@ -436,26 +488,30 @@ Characters:"""
             driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.HOME)
             time.sleep(3)
 
+            datos_vehiculo_dom = self.extraer_datos_vehiculo_dom()
+
             paso1_vehiculo = debug_path('paso1_vehiculo.png')
             driver.save_screenshot(paso1_vehiculo)
             with open(paso1_vehiculo, 'rb') as f:
                 image_data = base64.b64encode(f.read()).decode('utf-8')
 
-            
-            print("  🤖 Groq: Extrayendo datos del vehículo...")
-            response = client.chat.completions.create(
-                model="meta-llama/llama-4-scout-17b-16e-instruct",
-                messages=[{
-                    "role": "system",
-                    "content": "Extract vehicle data. Return ONLY JSON."
-                }, {
-                    "role": "user",
-                    "content": [{
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/png;base64,{image_data}"}
+            datos_vehiculo = datos_vehiculo_dom.copy()
+
+            try:
+                print("  🤖 Groq: Extrayendo datos del vehículo...")
+                response = client.chat.completions.create(
+                    model="meta-llama/llama-4-scout-17b-16e-instruct",
+                    messages=[{
+                        "role": "system",
+                        "content": "Extract vehicle data. Return ONLY JSON."
                     }, {
-                        "type": "text",
-                        "text": """Extract vehicle info from "Información general del vehículo" section.
+                        "role": "user",
+                        "content": [{
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/png;base64,{image_data}"}
+                        }, {
+                            "type": "text",
+                            "text": """Extract vehicle info from "Información general del vehículo" section and from the summary box above it.
 
     Return ONLY this JSON:
     {
@@ -468,15 +524,25 @@ Characters:"""
     "tipo_servicio": "",
     "estado": ""
     }"""
-                    }]
-                }],
-                temperature=0.1,
-                max_tokens=200
-            )
-            
-            respuesta = str(response.choices[0].message.content).strip()
-            json_str = respuesta[respuesta.find("{"):respuesta.rfind("}")+1]
-            datos_vehiculo = json.loads(json_str)
+                        }]
+                    }],
+                    temperature=0.1,
+                    max_tokens=200
+                )
+                
+                respuesta = str(response.choices[0].message.content).strip()
+                json_str = respuesta[respuesta.find("{"):respuesta.rfind("}")+1]
+                datos_vehiculo_groq = json.loads(json_str)
+                datos_vehiculo = {
+                    campo: (datos_vehiculo_dom.get(campo, "") or str(datos_vehiculo_groq.get(campo, "")).strip())
+                    for campo in [
+                        "marca", "linea", "modelo", "color", "combustible",
+                        "clase", "tipo_servicio", "estado"
+                    ]
+                }
+            except Exception as e:
+                print(f"  ⚠️  Error vehículo Groq, usando DOM: {str(e)[:80]}")
+
             print(f"  ✅ Vehículo: {datos_vehiculo.get('marca')} {datos_vehiculo.get('linea')} {datos_vehiculo.get('modelo')}")
             
             # ========== EXTRAE SOAT ==========
@@ -644,7 +710,7 @@ Characters:"""
                     continue
                 
                 if not self.resolver_captcha_con_groq():
-                    print("  ⚠️  No se ingresó CAPTCHA")
+                    print("  ⚠️  La IA no resolvió el CAPTCHA")
                     continue
                 
                 if not ClickOn.element(driver, RuntScreen.submit_btn):

@@ -1,10 +1,17 @@
-from flask import Flask, render_template, jsonify, send_file
+from flask import Flask, render_template, jsonify, Response
 from flask_socketio import SocketIO
 import subprocess
 import os
 import sys
 import threading
-import pandas as pd
+import csv
+import io
+
+import gspread
+from dotenv import load_dotenv
+from oauth2client.service_account import ServiceAccountCredentials
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'runt-bot-dev')
@@ -12,6 +19,55 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 bot_process = None
 bot_running = False
+
+
+def get_sheet():
+    scope = [
+        'https://spreadsheets.google.com/feeds',
+        'https://www.googleapis.com/auth/drive',
+    ]
+    credentials_file = os.getenv('GOOGLE_CREDENTIALS_FILE', 'credentials.json')
+    sheet_name = os.getenv('SHEET_NAME', 'Consultas RUNT')
+    creds = ServiceAccountCredentials.from_json_keyfile_name(credentials_file, scope)
+    client = gspread.authorize(creds)
+    spreadsheet = client.open(sheet_name)
+    return spreadsheet, spreadsheet.sheet1
+
+
+def get_sheet_payload():
+    spreadsheet, sheet = get_sheet()
+    values = sheet.get_all_values()
+    headers = values[0] if values else []
+    rows = []
+
+    for raw_row in values[1:]:
+        if not any(cell.strip() for cell in raw_row):
+            continue
+
+        normalized = raw_row + [''] * max(0, len(headers) - len(raw_row))
+        rows.append({
+            header: normalized[index] if index < len(normalized) else ''
+            for index, header in enumerate(headers)
+        })
+
+    processed_rows = [
+        row for row in rows
+        if any(str(row.get(header, '')).strip() for header in headers[2:])
+    ]
+
+    return {
+        'sheet_name': os.getenv('SHEET_NAME', 'Consultas RUNT'),
+        'spreadsheet_url': getattr(spreadsheet, 'url', ''),
+        'columns': headers,
+        'rows': rows,
+        'summary': {
+            'total': len(rows),
+            'processed': len(processed_rows),
+            'pending': max(len(rows) - len(processed_rows), 0),
+            'soat_vigente': sum(1 for row in rows if str(row.get('soat_estado', '')).upper() == 'VIGENTE'),
+            'rtm_vigente': sum(1 for row in rows if str(row.get('rtm_estado', '')).upper() == 'VIGENTE'),
+        },
+    }
 
 @app.route('/')
 def index():
@@ -82,23 +138,49 @@ def detener_bot():
 
 @app.route('/estado')
 def estado():
+    sheet_ok = False
+    rows_count = 0
+    sheet_error = None
+
+    try:
+        payload = get_sheet_payload()
+        sheet_ok = True
+        rows_count = len(payload['rows'])
+    except Exception as e:
+        sheet_error = str(e)
+
     return jsonify({
         'ejecutando': bot_running,
-        'resultados_disponibles': os.path.exists('resultados_runt.csv')
+        'resultados_disponibles': rows_count > 0,
+        'sheet_ok': sheet_ok,
+        'sheet_error': sheet_error,
+        'registros': rows_count,
     })
 
 @app.route('/descargar')
 def descargar():
-    if os.path.exists('resultados_runt.csv'):
-        return send_file('resultados_runt.csv', as_attachment=True)
-    return jsonify({'error': 'No hay resultados'}), 404
+    try:
+        payload = get_sheet_payload()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=payload['columns'])
+    writer.writeheader()
+    writer.writerows(payload['rows'])
+
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=resultados_runt_google_sheet.csv'},
+    )
 
 @app.route('/resultados')
 def ver_resultados():
-    if os.path.exists('resultados_runt.csv'):
-        df = pd.read_csv('resultados_runt.csv')
-        return jsonify(df.to_dict('records'))
-    return jsonify([])
+    try:
+        return jsonify(get_sheet_payload())
+    except Exception as e:
+        return jsonify({'error': str(e), 'rows': [], 'columns': [], 'summary': {}}), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', '8000'))

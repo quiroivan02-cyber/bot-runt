@@ -8,178 +8,373 @@
     <style>
       :root {
         color-scheme: light;
-        --bg: #f6f7f9;
+        --bg: #f4f6f8;
         --panel: #ffffff;
-        --text: #1d2430;
-        --muted: #687385;
-        --line: #d9dee7;
-        --primary: #1463ff;
-        --danger: #c83232;
-        --ok: #137a4b;
-        --warn: #996800;
+        --text: #111827;
+        --muted: #667085;
+        --soft: #f8fafc;
+        --line: #d8dee8;
+        --primary: #155eef;
+        --primary-hover: #0f4fd0;
+        --danger: #b42318;
+        --danger-bg: #fff3f1;
+        --ok: #067647;
+        --ok-bg: #ecfdf3;
+        --warn: #b54708;
+        --warn-bg: #fffaeb;
+        --info: #175cd3;
+        --info-bg: #eff8ff;
+        --violet: #6941c6;
+        --violet-bg: #f4f3ff;
+        --cyan: #0e7090;
+        --cyan-bg: #ecfdff;
+        --rose: #c01048;
+        --rose-bg: #fff1f3;
+        --teal: #107569;
+        --teal-bg: #f0fdfa;
+        --amber: #b54708;
+        --amber-bg: #fffbeb;
       }
 
       * { box-sizing: border-box; }
+
       body {
         margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: var(--bg);
+        min-width: 320px;
+        background:
+          linear-gradient(180deg, #eef6ff 0, #f7f8fb 280px, var(--bg) 100%);
         color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
       header {
-        border-bottom: 1px solid var(--line);
-        background: var(--panel);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: linear-gradient(90deg, #102a83 0%, #155eef 54%, #0e9384 100%);
+        border-bottom: 0;
+        color: #fff;
+        box-shadow: 0 12px 32px rgba(16, 42, 131, .18);
+        backdrop-filter: blur(10px);
       }
 
       .wrap {
-        width: min(1180px, calc(100% - 32px));
+        width: min(1240px, calc(100% - 32px));
         margin: 0 auto;
       }
 
       .topbar {
-        min-height: 72px;
+        min-height: 76px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
       }
 
+      h1, h2, h3, p { margin: 0; }
+
       h1 {
-        margin: 0;
         font-size: 22px;
+        font-weight: 800;
         letter-spacing: 0;
       }
 
       .subtitle {
         margin-top: 4px;
-        color: var(--muted);
-        font-size: 14px;
+        color: rgba(255, 255, 255, .78);
+        font-size: 13px;
       }
 
       .actions {
         display: flex;
+        align-items: center;
         gap: 10px;
         flex-wrap: wrap;
       }
 
       button, a.button {
-        height: 40px;
-        border: 1px solid var(--line);
-        border-radius: 6px;
+        min-height: 40px;
+        border: 1px solid rgba(255, 255, 255, .28);
+        border-radius: 7px;
         padding: 0 14px;
-        background: var(--panel);
-        color: var(--text);
-        font-weight: 600;
+        background: rgba(255, 255, 255, .94);
+        color: #101828;
+        font-size: 14px;
+        font-weight: 700;
         cursor: pointer;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 8px;
       }
 
-      button.primary { background: var(--primary); border-color: var(--primary); color: white; }
-      button.danger { border-color: #f0c4c4; color: var(--danger); }
-      button:disabled { opacity: .55; cursor: not-allowed; }
+      button:hover, a.button:hover { border-color: #b8c2d2; }
+      button.primary { background: #f9fafb; border-color: #f9fafb; color: #1237a8; }
+      button.primary:hover { background: #eaf1ff; }
+      button.danger { border-color: rgba(255, 255, 255, .32); color: #b42318; background: #fff3f1; }
+      button:disabled { opacity: .5; cursor: not-allowed; }
 
       main {
-        padding: 24px 0 40px;
-      }
-
-      .grid {
+        padding: 22px 0 42px;
         display: grid;
-        grid-template-columns: 320px 1fr;
         gap: 18px;
-        align-items: start;
       }
 
       .panel {
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(16, 24, 40, .06);
       }
 
-      .panel h2 {
-        margin: 0;
-        padding: 16px 16px 0;
-        font-size: 15px;
+      .panel-head {
+        min-height: 54px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(90deg, #ffffff 0%, #f5f9ff 100%);
       }
 
-      .status {
-        padding: 16px;
+      .panel-title {
         display: grid;
-        gap: 12px;
+        gap: 2px;
       }
 
-      .metric {
-        border: 1px solid var(--line);
-        border-radius: 6px;
-        padding: 12px;
+      .panel-title h2 {
+        font-size: 15px;
+        font-weight: 800;
       }
 
-      .metric span {
-        display: block;
+      .panel-title span {
         color: var(--muted);
         font-size: 12px;
       }
 
-      .metric strong {
-        display: block;
-        margin-top: 4px;
-        font-size: 18px;
+      .status-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
       }
 
-      .logs {
-        height: 460px;
-        overflow: auto;
-        padding: 14px 16px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 13px;
-        line-height: 1.55;
-        white-space: pre-wrap;
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--warn);
       }
 
-      .log { border-bottom: 1px solid #eef1f5; padding: 5px 0; }
-      .log.success { color: var(--ok); }
-      .log.warning { color: var(--warn); }
-      .log.error { color: var(--danger); }
+      .dot.ok { background: var(--ok); }
+      .dot.error { background: var(--danger); }
+
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .kpi {
+        min-height: 104px;
+        padding: 16px;
+        display: grid;
+        align-content: space-between;
+        gap: 14px;
+        position: relative;
+        border: 0;
+        color: #102033;
+      }
+
+      .kpi::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, .65);
+        pointer-events: none;
+      }
+
+      .kpi span {
+        color: rgba(16, 32, 51, .66);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .kpi strong {
+        font-size: 28px;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .kpi small {
+        color: rgba(16, 32, 51, .68);
+        font-size: 12px;
+      }
+
+      .kpi.bot { background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%); }
+      .kpi.records { background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 100%); }
+      .kpi.processed { background: linear-gradient(135deg, #f4f3ff 0%, #faf5ff 100%); }
+      .kpi.soat { background: linear-gradient(135deg, #ecfdf3 0%, #f0fdfa 100%); }
+      .kpi.rtm { background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%); }
+
+      .kpi.bot strong { color: var(--primary); }
+      .kpi.records strong { color: var(--cyan); }
+      .kpi.processed strong { color: var(--violet); }
+      .kpi.soat strong { color: var(--ok); }
+      .kpi.rtm strong { color: var(--amber); }
+
+      .workbench {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(360px, .85fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .toolbar {
+        padding: 12px 16px;
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) 170px 170px;
+        gap: 10px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(90deg, #f8fbff 0%, #f9fafb 100%);
+      }
+
+      input, select {
+        width: 100%;
+        height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 0 12px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+        font-size: 14px;
+      }
+
+      input:focus, select:focus {
+        outline: 2px solid rgba(21, 94, 239, .18);
+        border-color: var(--primary);
+      }
 
       .table-wrap {
+        max-height: 560px;
         overflow: auto;
-        max-height: 420px;
       }
 
       table {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
         font-size: 13px;
       }
 
       th, td {
-        border-bottom: 1px solid var(--line);
-        padding: 10px 12px;
+        border-bottom: 1px solid #edf0f5;
+        padding: 11px 12px;
         text-align: left;
         white-space: nowrap;
+        vertical-align: middle;
       }
 
       th {
         position: sticky;
         top: 0;
-        background: var(--panel);
-        color: var(--muted);
-        font-weight: 700;
+        z-index: 1;
+        background: #f1f6ff;
+        color: #344054;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
       }
+
+      tbody tr:nth-child(even) td { background: #fcfdff; }
+      tbody tr:hover td { background: #eef6ff; }
 
       .empty {
-        padding: 18px 16px;
+        padding: 42px 16px;
         color: var(--muted);
+        text-align: center;
       }
 
-      @media (max-width: 840px) {
-        .topbar { align-items: flex-start; flex-direction: column; padding: 16px 0; }
-        .grid { grid-template-columns: 1fr; }
+      .badge {
+        min-width: 86px;
+        min-height: 26px;
+        border-radius: 999px;
+        padding: 4px 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 800;
+        background: #f2f4f7;
+        color: #475467;
+      }
+
+      .badge.ok { background: var(--ok-bg); color: var(--ok); border: 1px solid #abefc6; }
+      .badge.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #fedf89; }
+      .badge.error { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecdca; }
+      .badge.info { background: var(--info-bg); color: var(--info); border: 1px solid #b2ddff; }
+
+      .logs {
+        height: 560px;
+        overflow: auto;
+        padding: 12px 16px;
+        background: #101828;
+        color: #d0d5dd;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+      }
+
+      .log {
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, .07);
+      }
+
+      .log.success { color: #75e0a7; }
+      .log.warning { color: #fec84b; }
+      .log.error { color: #fda29b; }
+
+      .sheet-meta {
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: linear-gradient(90deg, #f0fdfa 0%, #eff8ff 50%, #f4f3ff 100%);
+      }
+
+      .sheet-meta p {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .sheet-meta strong {
+        color: var(--text);
+      }
+
+      @media (max-width: 1040px) {
+        .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .workbench { grid-template-columns: 1fr; }
+      }
+
+      @media (max-width: 760px) {
+        .wrap { width: min(100% - 20px, 1240px); }
+        .topbar { align-items: flex-start; flex-direction: column; padding: 14px 0; }
         .actions { width: 100%; }
-        button, a.button { flex: 1; min-width: 130px; }
+        button, a.button { flex: 1; min-width: 128px; }
+        .kpis { grid-template-columns: 1fr; }
+        .toolbar { grid-template-columns: 1fr; }
+        .panel-head { align-items: flex-start; flex-direction: column; }
+        .sheet-meta { align-items: flex-start; flex-direction: column; }
       }
     </style>
   </head>
@@ -188,63 +383,164 @@
       <div class="wrap topbar">
         <div>
           <h1>Bot RUNT Dashboard</h1>
-          <div class="subtitle">Ejecucion, logs y resultados del proceso de consulta vehicular</div>
+          <div class="subtitle">Control operativo y resultados sincronizados desde Google Sheets</div>
         </div>
         <div class="actions">
           <button id="runBtn" class="primary">Ejecutar</button>
           <button id="stopBtn" class="danger">Detener</button>
           <button id="refreshBtn">Actualizar</button>
+          <a class="button" id="sheetLink" href="#" target="_blank" rel="noreferrer">Abrir Sheet</a>
           <a class="button" href="/descargar">Descargar CSV</a>
         </div>
       </div>
     </header>
 
     <main class="wrap">
-      <div class="grid">
+      <section class="kpis">
+        <div class="panel kpi bot">
+          <span>Bot</span>
+          <strong id="botState">-</strong>
+          <small id="botHint">Revisando estado</small>
+        </div>
+        <div class="panel kpi records">
+          <span>Registros</span>
+          <strong id="totalRows">0</strong>
+          <small>Filas con placa y cedula</small>
+        </div>
+        <div class="panel kpi processed">
+          <span>Procesados</span>
+          <strong id="processedRows">0</strong>
+          <small id="pendingRows">0 pendientes</small>
+        </div>
+        <div class="panel kpi soat">
+          <span>SOAT vigente</span>
+          <strong id="soatRows">0</strong>
+          <small>Segun hoja actual</small>
+        </div>
+        <div class="panel kpi rtm">
+          <span>RTM vigente</span>
+          <strong id="rtmRows">0</strong>
+          <small>Segun hoja actual</small>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="sheet-meta">
+          <p>Fuente: <strong id="sheetName">Google Sheets</strong></p>
+          <div class="status-line">
+            <span id="sheetDot" class="dot"></span>
+            <span id="sheetStatus">Conectando</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="workbench">
         <section class="panel">
-          <h2>Estado</h2>
-          <div class="status">
-            <div class="metric">
-              <span>Bot</span>
-              <strong id="botState">Revisando</strong>
+          <div class="panel-head">
+            <div class="panel-title">
+              <h2>Resultados</h2>
+              <span id="visibleRows">0 registros visibles</span>
             </div>
-            <div class="metric">
-              <span>Resultados</span>
-              <strong id="resultState">Revisando</strong>
-            </div>
-            <div class="metric">
-              <span>Registros visibles</span>
-              <strong id="rowCount">0</strong>
-            </div>
+          </div>
+
+          <div class="toolbar">
+            <input id="searchInput" type="search" placeholder="Buscar placa, cedula, marca, estado...">
+            <select id="soatFilter" aria-label="Filtro SOAT">
+              <option value="">SOAT: todos</option>
+              <option value="VIGENTE">SOAT vigente</option>
+              <option value="NO VIGENTE">SOAT no vigente</option>
+              <option value="ERROR">SOAT error</option>
+            </select>
+            <select id="rtmFilter" aria-label="Filtro RTM">
+              <option value="">RTM: todos</option>
+              <option value="VIGENTE">RTM vigente</option>
+              <option value="NO VIGENTE">RTM no vigente</option>
+              <option value="ERROR">RTM error</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table id="resultsTable"></table>
+            <div id="emptyResults" class="empty">No hay datos disponibles en la hoja.</div>
           </div>
         </section>
 
         <section class="panel">
-          <h2>Logs en vivo</h2>
+          <div class="panel-head">
+            <div class="panel-title">
+              <h2>Logs en vivo</h2>
+              <span id="logCount">0 eventos</span>
+            </div>
+            <button id="clearLogsBtn">Limpiar</button>
+          </div>
           <div id="logs" class="logs"></div>
         </section>
       </div>
-
-      <section class="panel" style="margin-top:18px;">
-        <h2>Resultados</h2>
-        <div class="table-wrap">
-          <table id="resultsTable"></table>
-          <div id="emptyResults" class="empty">No hay resultados CSV disponibles.</div>
-        </div>
-      </section>
     </main>
 
     <script>
       const socket = io();
+      const state = { rows: [], columns: [], logCount: 0 };
+
       const logs = document.getElementById("logs");
       const runBtn = document.getElementById("runBtn");
       const stopBtn = document.getElementById("stopBtn");
       const refreshBtn = document.getElementById("refreshBtn");
+      const clearLogsBtn = document.getElementById("clearLogsBtn");
       const botState = document.getElementById("botState");
-      const resultState = document.getElementById("resultState");
-      const rowCount = document.getElementById("rowCount");
+      const botHint = document.getElementById("botHint");
+      const totalRows = document.getElementById("totalRows");
+      const processedRows = document.getElementById("processedRows");
+      const pendingRows = document.getElementById("pendingRows");
+      const soatRows = document.getElementById("soatRows");
+      const rtmRows = document.getElementById("rtmRows");
+      const sheetName = document.getElementById("sheetName");
+      const sheetStatus = document.getElementById("sheetStatus");
+      const sheetDot = document.getElementById("sheetDot");
+      const sheetLink = document.getElementById("sheetLink");
+      const visibleRows = document.getElementById("visibleRows");
       const table = document.getElementById("resultsTable");
       const emptyResults = document.getElementById("emptyResults");
+      const searchInput = document.getElementById("searchInput");
+      const soatFilter = document.getElementById("soatFilter");
+      const rtmFilter = document.getElementById("rtmFilter");
+      const logCount = document.getElementById("logCount");
+
+      const labels = {
+        placa: "Placa",
+        cedula: "Cedula",
+        marca: "Marca",
+        linea: "Linea",
+        modelo: "Modelo",
+        color: "Color",
+        clase: "Clase",
+        tipo_servicio: "Servicio",
+        estado: "Estado",
+        combustible: "Combustible",
+        soat_numero: "SOAT No.",
+        soat_expedicion: "SOAT exp.",
+        soat_inicio: "SOAT inicio",
+        soat_fin: "SOAT fin",
+        soat_aseguradora: "Aseguradora",
+        soat_estado: "SOAT",
+        rtm_numero: "RTM No.",
+        rtm_vigencia: "RTM vigencia",
+        rtm_cda: "CDA",
+        rtm_estado: "RTM"
+      };
+
+      function badgeClass(value) {
+        const normalized = String(value || "").toUpperCase();
+        if (normalized === "VIGENTE" || normalized === "SI") return "ok";
+        if (normalized === "NO VIGENTE" || normalized === "PENDIENTE") return "warn";
+        if (normalized === "ERROR") return "error";
+        return "info";
+      }
+
+      function setSheetStatus(ok, message) {
+        sheetDot.className = `dot ${ok ? "ok" : "error"}`;
+        sheetStatus.textContent = message;
+      }
 
       function addLog(message, type = "info") {
         const line = document.createElement("div");
@@ -252,6 +548,8 @@
         line.textContent = message;
         logs.appendChild(line);
         logs.scrollTop = logs.scrollHeight;
+        state.logCount += 1;
+        logCount.textContent = `${state.logCount} eventos`;
       }
 
       async function post(url) {
@@ -264,26 +562,45 @@
       async function loadStatus() {
         const res = await fetch("/estado");
         const data = await res.json();
-        botState.textContent = data.ejecutando ? "Ejecutando" : "Detenido";
-        resultState.textContent = data.resultados_disponibles ? "Disponible" : "No disponible";
+        botState.textContent = data.ejecutando ? "Activo" : "Detenido";
+        botHint.textContent = data.ejecutando ? "Proceso en ejecucion" : "Listo para ejecutar";
         runBtn.disabled = data.ejecutando;
         stopBtn.disabled = !data.ejecutando;
+
+        if (data.sheet_ok) {
+          setSheetStatus(true, `${data.registros} registros cargados`);
+        } else if (data.sheet_error) {
+          setSheetStatus(false, data.sheet_error);
+        }
       }
 
-      async function loadResults() {
-        const res = await fetch("/resultados");
-        const rows = await res.json();
-        rowCount.textContent = rows.length;
+      function filteredRows() {
+        const query = searchInput.value.trim().toLowerCase();
+        const soat = soatFilter.value;
+        const rtm = rtmFilter.value;
+
+        return state.rows.filter((row) => {
+          const matchesQuery = !query || Object.values(row).some((value) =>
+            String(value || "").toLowerCase().includes(query)
+          );
+          const matchesSoat = !soat || String(row.soat_estado || "").toUpperCase() === soat;
+          const matchesRtm = !rtm || String(row.rtm_estado || "").toUpperCase() === rtm;
+          return matchesQuery && matchesSoat && matchesRtm;
+        });
+      }
+
+      function renderTable() {
+        const rows = filteredRows();
+        visibleRows.textContent = `${rows.length} registros visibles`;
         table.innerHTML = "";
         emptyResults.style.display = rows.length ? "none" : "block";
         if (!rows.length) return;
 
-        const keys = Object.keys(rows[0]);
         const thead = document.createElement("thead");
         const header = document.createElement("tr");
-        keys.forEach((key) => {
+        state.columns.forEach((key) => {
           const th = document.createElement("th");
-          th.textContent = key;
+          th.textContent = labels[key] || key;
           header.appendChild(th);
         });
         thead.appendChild(header);
@@ -292,14 +609,62 @@
         const tbody = document.createElement("tbody");
         rows.forEach((row) => {
           const tr = document.createElement("tr");
-          keys.forEach((key) => {
+          state.columns.forEach((key) => {
             const td = document.createElement("td");
-            td.textContent = row[key] ?? "";
+            const value = row[key] || "";
+            if (key === "soat_estado" || key === "rtm_estado") {
+              const badge = document.createElement("span");
+              badge.className = `badge ${badgeClass(value)}`;
+              badge.textContent = value || "PENDIENTE";
+              td.appendChild(badge);
+            } else {
+              td.textContent = value || "-";
+            }
             tr.appendChild(td);
           });
           tbody.appendChild(tr);
         });
         table.appendChild(tbody);
+      }
+
+      async function loadResults() {
+        try {
+          const res = await fetch("/resultados");
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "No se pudo cargar Google Sheets");
+
+          state.rows = data.rows || [];
+          state.columns = data.columns || [];
+          const summary = data.summary || {};
+
+          sheetName.textContent = data.sheet_name || "Google Sheets";
+          totalRows.textContent = summary.total ?? state.rows.length;
+          processedRows.textContent = summary.processed ?? 0;
+          pendingRows.textContent = `${summary.pending ?? 0} pendientes`;
+          soatRows.textContent = summary.soat_vigente ?? 0;
+          rtmRows.textContent = summary.rtm_vigente ?? 0;
+
+          if (data.spreadsheet_url) {
+            sheetLink.href = data.spreadsheet_url;
+            sheetLink.style.display = "inline-flex";
+          } else {
+            sheetLink.style.display = "none";
+          }
+
+          setSheetStatus(true, `${state.rows.length} registros cargados`);
+          renderTable();
+        } catch (err) {
+          state.rows = [];
+          state.columns = [];
+          totalRows.textContent = "0";
+          processedRows.textContent = "0";
+          pendingRows.textContent = "0 pendientes";
+          soatRows.textContent = "0";
+          rtmRows.textContent = "0";
+          setSheetStatus(false, err.message);
+          renderTable();
+          addLog(err.message, "error");
+        }
       }
 
       runBtn.addEventListener("click", async () => {
@@ -315,6 +680,7 @@
       stopBtn.addEventListener("click", async () => {
         try {
           await post("/detener");
+          addLog("Solicitud de detencion enviada", "warning");
           await loadStatus();
         } catch (err) {
           addLog(err.message, "error");
@@ -325,6 +691,16 @@
         await loadStatus();
         await loadResults();
       });
+
+      clearLogsBtn.addEventListener("click", () => {
+        logs.innerHTML = "";
+        state.logCount = 0;
+        logCount.textContent = "0 eventos";
+      });
+
+      searchInput.addEventListener("input", renderTable);
+      soatFilter.addEventListener("change", renderTable);
+      rtmFilter.addEventListener("change", renderTable);
 
       socket.on("log", (data) => addLog(data.mensaje, data.tipo));
       socket.on("bot_finished", async () => {

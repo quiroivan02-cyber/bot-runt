@@ -104,8 +104,7 @@ Consulta [DEPLOYMENT.md](DEPLOYMENT.md) para subirlo a GitHub y ejecutarlo como 
 | `HEADLESS` | Ejecuta Firefox sin ventana | `false` local, `true` en Docker |
 | `PORT` | Puerto del dashboard Flask | `8000` |
 | `FLASK_SECRET_KEY` | Clave interna de sesion Flask | `change-me` |
-| `GROQ_API_KEY` | API key para extraccion visual | vacio |
-| `ENABLE_GROQ_CAPTCHA` | Habilita lectura automatica de CAPTCHA | `false` |
+| `GROQ_API_KEY` | API key para extraccion visual y CAPTCHA | vacio |
 
 ## Nota de uso responsable
 
